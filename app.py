@@ -26,20 +26,10 @@ for brand in raw_data:
 
 @app.route("/select", methods=["POST"])
 def select():
+    # JSON 파싱 강제 + 오류 무시
     body = request.get_json(force=True, silent=True)
     if body is None:
-        return jsonify({
-            "version": "2.0",
-            "template": {
-                "outputs": [
-                    {
-                        "simpleText": {
-                            "text": "요청 형식이 올바르지 않습니다. [JSON 파싱 실패]"
-                        }
-                    }
-                ]
-            }
-        }), 400
+        return jsonify({"error": "Invalid JSON format"}), 400
 
     action = body.get("action", {})
     params = action.get("params", {})
