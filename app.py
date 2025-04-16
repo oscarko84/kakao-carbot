@@ -26,10 +26,9 @@ for brand in raw_data:
 
 @app.route("/select", methods=["POST"])
 def select():
-    # JSON 파싱 강제 + 오류 무시
     body = request.get_json(force=True, silent=True)
     if body is None:
-        return jsonify({"error": "Invalid JSON format"}), 400
+        return jsonify({"error": "Invalid or missing JSON in request."}), 400
 
     action = body.get("action", {})
     params = action.get("params", {})
