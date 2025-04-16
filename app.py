@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import gzip
 import json
 
@@ -26,7 +26,21 @@ for brand in raw_data:
 
 @app.route("/select", methods=["POST"])
 def select():
-    body = request.get_json()
+    body = request.get_json(force=True, silent=True)
+    if body is None:
+        return jsonify({
+            "version": "2.0",
+            "template": {
+                "outputs": [
+                    {
+                        "simpleText": {
+                            "text": "요청 형식이 올바르지 않습니다. [JSON 파싱 실패]"
+                        }
+                    }
+                ]
+            }
+        }), 400
+
     action = body.get("action", {})
     params = action.get("params", {})
 
@@ -53,41 +67,32 @@ def select():
     elif step == "part" and brand and model and trim and year:
         part_list = car_tree[brand][model][trim][year]
         parts_text = "\n".join([f"{part['partName']}: {part['url']}" for part in part_list])
-
-        return app.response_class(
-            response=json.dumps({
-                "version": "2.0",
-                "template": {
-                    "outputs": [
-                        {
-                            "simpleText": {
-                                "text": parts_text or "부품 정보가 없습니다."
-                            }
-                        }
-                    ]
-                }
-            }),
-            status=200,
-            mimetype='application/json'
-        )
-
-    return app.response_class(
-        response=json.dumps({
+        return jsonify({
             "version": "2.0",
             "template": {
                 "outputs": [
                     {
-                        "basicCard": {
-                            "title": f"{step.capitalize()} 선택",
-                            "buttons": [{"action": "message", "label": b, "messageText": b} for b in buttons[:10]]
+                        "simpleText": {
+                            "text": parts_text or "부품 정보가 없습니다."
                         }
                     }
                 ]
             }
-        }),
-        status=200,
-        mimetype='application/json'
-    )
+        })
+
+    return jsonify({
+        "version": "2.0",
+        "template": {
+            "outputs": [
+                {
+                    "basicCard": {
+                        "title": f"{step.capitalize()} 선택",
+                        "buttons": [{"action": "message", "label": b, "messageText": b} for b in buttons[:10]]
+                    }
+                }
+            ]
+        }
+    })
 
 if __name__ == "__main__":
     app.run(port=5000)
