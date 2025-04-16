@@ -27,8 +27,11 @@ for brand in raw_data:
 @app.route("/select", methods=["POST"])
 def select():
     body = request.get_json(force=True, silent=True)
+
     if body is None:
-        return jsonify({"error": "Invalid or missing JSON in request."}), 400
+        return jsonify({
+            "error": "Invalid or missing JSON"
+        }), 400
 
     action = body.get("action", {})
     params = action.get("params", {})
@@ -84,4 +87,4 @@ def select():
     })
 
 if __name__ == "__main__":
-    app.run(port=5000)
+    app.run(host="0.0.0.0", port=5000)
