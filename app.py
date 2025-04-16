@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request
 import gzip
 import json
 
@@ -53,32 +53,41 @@ def select():
     elif step == "part" and brand and model and trim and year:
         part_list = car_tree[brand][model][trim][year]
         parts_text = "\n".join([f"{part['partName']}: {part['url']}" for part in part_list])
-        return jsonify({
+
+        return app.response_class(
+            response=json.dumps({
+                "version": "2.0",
+                "template": {
+                    "outputs": [
+                        {
+                            "simpleText": {
+                                "text": parts_text or "부품 정보가 없습니다."
+                            }
+                        }
+                    ]
+                }
+            }),
+            status=200,
+            mimetype='application/json'
+        )
+
+    return app.response_class(
+        response=json.dumps({
             "version": "2.0",
             "template": {
                 "outputs": [
                     {
-                        "simpleText": {
-                            "text": parts_text or "부품 정보가 없습니다."
+                        "basicCard": {
+                            "title": f"{step.capitalize()} 선택",
+                            "buttons": [{"action": "message", "label": b, "messageText": b} for b in buttons[:10]]
                         }
                     }
                 ]
             }
-        })
-
-    return jsonify({
-        "version": "2.0",
-        "template": {
-            "outputs": [
-                {
-                    "basicCard": {
-                        "title": f"{step.capitalize()} 선택",
-                        "buttons": [{"action": "message", "label": b, "messageText": b} for b in buttons[:10]]
-                    }
-                }
-            ]
-        }
-    })
+        }),
+        status=200,
+        mimetype='application/json'
+    )
 
 if __name__ == "__main__":
     app.run(port=5000)
